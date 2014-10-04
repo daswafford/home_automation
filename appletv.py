@@ -1,3 +1,8 @@
+#!/usr/bin/python
+""" Apple TV Control based on Telnet
+    to a Global Cache IP-TO_IR device.
+"""
+
 import sys
 import time
 import telnetlib
