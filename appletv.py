@@ -62,6 +62,8 @@ USAGE = ('{program} [mode]\n'
                                  
 
 def main():
+    f = open('/opt/appletv.log', 'a')
+
     if len(sys.argv) < 2:
         raise SystemExit(USAGE)
 
@@ -69,11 +71,14 @@ def main():
     if mode not in MODE_TO_CMDS:
 	raise SystemExit(USAGE)
 
+    f.write('sending:  {0}\n'.format(MODE_TO_CMDS[mode]))
     conn = telnetlib.Telnet(GLOBAL_CACHE, CONTROL_PORT)
     conn.write('{command}\r\n'.format(command=MODE_TO_CMDS[mode]))
+    output = conn.read_some()
+    f.write('received:  {0}\n'.format(output))
     time.sleep(0.2)
     conn.close()
-
+    f.close()
 
 if __name__ == '__main__':
     main()
