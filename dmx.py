@@ -28,9 +28,14 @@ UNIVERSE = 0
 def color_map(color):
     rgb_vals = {
         'off':  [0, 0, 0],
+        'blue':  [0, 0, 40],
         'teal':  [0, 40, 30],
         'purple': [50, 0, 50],
+        'orange': [90, 20, 0],
+        'white': [30, 30, 30],
     }
+    if color not in rgb_vals:
+	color = 'off'
     return rgb_vals[color]
 
 
