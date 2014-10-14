@@ -17,44 +17,44 @@
             protoc ./protocol/Ola.proto --python_out=/home/dswafford/
 """
 
-import argparse
 import array
 from ola import ClientWrapper
 import sys
-
+import time
 
 UNIVERSE = 0
 
-def cli_options():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--rgb')
-    options = parser.parse_args()
-    if options.rgb:
-        temp = options.rgb.split(',')
-        options.rgb = []
-        for rgb_val in temp:
-            options.rgb.append(int(rgb_val))
-    return options
+
+def color_map(color):
+    rgb_vals = {
+        'off':  [0, 0, 0],
+        'teal':  [0, 40, 30],
+        'purple': [50, 0, 50],
+    }
+    return rgb_vals[color]
 
 
-def scene(rgb, dimmer=1, light_count=2): 
+def scene(color, dimmer=1):
+    rgb = color_map(color)
     dimmed_rgb = []
     for color in rgb:
-        dimmed_rgb.append(int(color * dimmer))
+        dimmed_value = int(color * dimmer)
+        if dimmed_value <= 255:
+            dimmed_rgb.append(dimmed_value)
+    return dimmed_rgb
 
+
+def expand_light_count(dimmed_rgb, count):
     dmx_channels = []
-    for light in range(light_count):
+    for light in range(count):
         dmx_channels.extend(dimmed_rgb)
     return dmx_channels
 
 
 def compile_dmx_data(dmx_channels):
-    fade_in = []
-    fade_steps= 5
+    fade_in_steps = []
+    fade_steps = 10
     for fade_step in range(fade_steps):
-        if fade_step == 0:
-            continue
-
         # Build an array of all DMX channels-to-values to send
         # for example, if you use 6 channels, then send something for all
         # six, even if you only intend to change the lights running on 4-6.
@@ -63,16 +63,18 @@ def compile_dmx_data(dmx_channels):
         data = array.array('B')
         for channel_value in dmx_channels:
             # Fade is buggy right now.  My math is probably off here.
-            channel_value = channel_value #* float(1 / (fade_steps - fade_step))
-            data.append(int(channel_value))
-        fade_in.append(data)
-    return fade_in
+            if channel_value == 0:
+                data.append(channel_value)
+	    else:
+		dimmed_value = channel_value / (fade_steps - fade_step)
+                data.append(dimmed_value)
+    	fade_in_steps.append(data)
+    return fade_in_steps
 
 
 def send_dmx(dmx_data):
     def _callback(state):
        wrapper.Stop()
-
     wrapper = ClientWrapper.ClientWrapper()
     client = wrapper.Client()
     client.SendDmx(UNIVERSE, dmx_data, _callback)
@@ -80,22 +82,25 @@ def send_dmx(dmx_data):
 
 
 def main():
-#    options = cli_options()
-#    Options of ArgV... to pick
-
-    if len(sys.argv) > 1:
-	if sys.argv[1].lower() == 'off':
-            dmx_channels = scene([0, 0, 0])
-        else:  # dimmer value specified
-	    dimmer = float(sys.argv[1])
-	    dmx_channels = scene([0, 40, 30], dimmer)
+    if len(sys.argv) != 2:
+        raise SystemExit('scene?')
     else:
-        dmx_channels = scene(rgb=[0, 40, 30])
+        color = sys.argv[1].lower()
 
-    dmx_data = compile_dmx_data(dmx_channels)
-    for fade_set in dmx_data:
-        print(fade_set)
-    	send_dmx(fade_set)
+    dimmed_rgb = scene(color, dimmer=1.0)
+
+    dmx_channels = expand_light_count(dimmed_rgb, count=2)
+
+    fade_in_steps = compile_dmx_data(dmx_channels)
+
+    previous_fade_set = []
+    for fade_set in fade_in_steps:
+        if fade_set == previous_fade_set:
+            continue
+	#print(fade_set)
+	send_dmx(fade_set)
+	time.sleep(0.02)
+        previous_fade_set = fade_set 
 
 
 if __name__ == '__main__':
