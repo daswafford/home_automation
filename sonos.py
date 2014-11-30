@@ -629,8 +629,9 @@ class SoCo(object):
 if __name__ == '__main__':
     players = {
 	'liv': '172.30.0.36',
-        'bdr': '172.30.0.37',
-        'pat': '172.30.0.38'}
+    'bdr': '172.30.0.37',
+    'pat': '172.30.0.38',
+    'kit': '172.30.0.39'}
 
     try:
     	mode = sys.argv[1].lower()
@@ -658,9 +659,9 @@ if __name__ == '__main__':
         print('unmutting volume')
     elif mode.startswith('vol'):
         level = re.match('^vol(\d+)', mode)
-	level = int(level.group(1))
+        level = int(level.group(1))
         soco.volume(level)
-	print('changed volume to {0}'.format(level))
+        print('changed volume to {0}'.format(level))
     elif mode == 'getvol':
         print(soco.volume())
     elif mode == 'linein':
@@ -673,8 +674,8 @@ if __name__ == '__main__':
             remote_player = sys.argv[3].lower()
         except IndexError:
             raise SystemExit('Usage:  <name>  join  <primary player>  <remote player>')
-        master_uid = soco.get_speaker_info()['uid']
-        print(master_uid)
-        remote_soco = _get_soco(remote_player)
-        foo = remote_soco.join(master_uid)
-        print(foo)
+        master_speaker_info = soco.get_speaker_info()
+        slave = SoCo(players[remote_player])
+        slave.join(master_speaker_info["uid"])
+    elif mode == 'party':
+        soco.partymode()
