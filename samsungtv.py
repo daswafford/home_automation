@@ -12,6 +12,10 @@ import telnetlib
 GLOBAL_CACHE = '172.30.0.34'
 CONTROL_PORT = 4998
 
+# To enable "Hotel Mode"
+# Mute + 1 8 2 + power
+# Control = "hotel"
+
 IR_PWRON = (
     'sendir,1:1,1,38000,3,1,171,168,22,61,22,61,22,61,22,20,22,20,22,20,22,20,'
     '22,20,22,61,22,61,22,61,22,20,22,20,22,20,22,20,22,20,22,61,22,20,22,20,'
