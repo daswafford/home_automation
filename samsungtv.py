@@ -94,8 +94,8 @@ MODE_TO_CMDS = {
 
 ROOMS_TO_PORTS = {
     'living':  1,
-    'bedroom': 2,
-    'kitchen': 3,
+    #'bedroom': 2,
+    'kitchen': 2,
 }
 
 def cli_options():
